@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - Glow & Grace</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="index.html">Glow & Grace</a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#products">Products</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <li><a href="cart.html" class="active">Cart</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div class="cart-container" id="cart-btn">
+                    <a href="cart.html">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="cart-count">0</span>
+                    </a>
+                </div>
+                <div id="auth-section">
+                    <a href="login.html" id="login-btn">Login</a>
+                    <a href="signup.html" id="signup-btn">Sign Up</a>
+                </div>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="cart-main">
+        <div class="container">
+            <h1>Your Shopping Cart</h1>
+            
+            <div id="cart-content">
+                <!-- Cart items will be displayed here -->
+                <div id="empty-cart" class="empty-cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h2>Your cart is empty</h2>
+                    <p>Looks like you haven't added any items to your cart yet.</p>
+                    <a href="index.html#products" class="btn">Continue Shopping</a>
+                </div>
+                
+                <div id="cart-items" class="cart-items" style="display: none;">
+                    <div class="cart-header">
+                        <div class="cart-header-item">Product</div>
+                        <div class="cart-header-item">Price</div>
+                        <div class="cart-header-item">Quantity</div>
+                        <div class="cart-header-item">Total</div>
+                        <div class="cart-header-item">Action</div>
+                    </div>
+                    <div id="cart-items-list"></div>
+                    
+                    <div class="cart-summary">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="cart-subtotal">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping:</span>
+                            <span id="cart-shipping">$5.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax:</span>
+                            <span id="cart-tax">$0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total:</span>
+                            <span id="cart-total">$5.00</span>
+                        </div>
+                        
+                        <div class="cart-actions">
+                            <a href="index.html#products" class="btn btn-secondary">Continue Shopping</a>
+                            <button id="checkout-btn" class="btn">Proceed to Checkout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-info">
+                <h3>Glow & Grace</h3>
+                <p>&copy; 2026 Glow & Grace Skincare. All rights reserved.</p>
+            </div>
+            <div class="footer-social">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Cart functions
+        function loadCart() {
+            return JSON.parse(localStorage.getItem('cart')) || [];
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        function updateCartCount() {
+            const cart = loadCart();
+            const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+            const countElement = document.getElementById('cart-count');
+            if (countElement) {
+                countElement.textContent = totalItems;
+            }
+        }
+
+        function updateCartDisplay() {
+            const cart = loadCart();
+            const cartItemsList = document.getElementById('cart-items-list');
+            const cartItems = document.getElementById('cart-items');
+            const emptyCart = document.getElementById('empty-cart');
+            
+            if (cart.length === 0) {
+                cartItems.style.display = 'none';
+                emptyCart.style.display = 'block';
+                updateCartCount();
+                return;
+            }
+            
+            // Show cart items
+            emptyCart.style.display = 'none';
+            cartItems.style.display = 'block';
+            
+            let cartHTML = '';
+            let subtotal = 0;
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                
+                cartHTML += `
+                    <div class="cart-item" data-id="${item.id}">
+                        <div class="cart-item-product">
+                            <img src="${item.image}" alt="${item.name}">
+                            <div>
+                                <h4>${item.name}</h4>
+                                <p class="category">${item.category}</p>
+                            </div>
+                        </div>
+                        <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+                        <div class="cart-item-quantity">
+                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                            <span class="quantity-value">${item.quantity}</span>
+                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                        </div>
+                        <div class="cart-item-total">$${itemTotal.toFixed(2)}</div>
+                        <div class="cart-item-action">
+                            <button class="remove-btn" onclick="removeFromCart(${item.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cartItemsList.innerHTML = cartHTML;
+            updateOrderSummary(subtotal);
+            updateCartCount();
+        }
+
+        function updateOrderSummary(subtotal) {
+            const shipping = 5.00;
+            const tax = subtotal * 0.08; // 8% tax
+            const total = subtotal + shipping + tax;
+            
+            document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('cart-tax').textContent = `$${tax.toFixed(2)}`;
+            document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function updateQuantity(productId, change) {
+            let cart = loadCart();
+            const itemIndex = cart.findIndex(item => item.id === productId);
+            
+            if (itemIndex !== -1) {
+                cart[itemIndex].quantity += change;
+                
+                if (cart[itemIndex].quantity <= 0) {
+                    cart.splice(itemIndex, 1);
+                }
+                
+                saveCart(cart);
+                updateCartDisplay();
+            }
+        }
+
+        function removeFromCart(productId) {
+            let cart = loadCart();
+            cart = cart.filter(item => item.id !== productId);
+            saveCart(cart);
+            updateCartDisplay();
+        }
+
+        // Initialize cart display
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartDisplay();
+            
+            // Checkout button
+            document.getElementById('checkout-btn').addEventListener('click', function() {
+                const cart = loadCart();
+                if (cart.length === 0) {
+                    alert('Your cart is empty! Add some products before checking out.');
+                    return;
+                }
+                
+                alert('Thank you for your order! This is a demo. In a real application, this would proceed to payment.');
+            });
+        });
+    </script>
+</body>
+</html>
